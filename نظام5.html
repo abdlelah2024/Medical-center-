@@ -1,0 +1,2983 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام إدارة المواعيد الطبية المتطور</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoi2YbYudin2YUg2KXYr9in2LHYqSDYp9mE2YXZiNin2LnZitivINin2YTYt9io2YrYqSIsInNob3J0X25hbWUiOiLYp9mE2YXZiNin2LnZitivINin2YTYt9io2YrYqSIsInN0YXJ0X3VybCI6Ii8iLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsImJhY2tncm91bmRfY29sb3IiOiIjZmZmZmZmIiwidGhlbWVfY29sb3IiOiIjNWQ1Y2RlIiwiaWNvbnMiOlt7InNyYyI6ImRhdGE6aW1hZ2Uvc3ZnK3htbDtiYXNlNjQsUEhOMlp5QjNhV1IwYUQwaU1qUXdJaUJvWldsbmFIUTlJakkwTUNJZ2RtbGxkMEp2ZUQwaU1DQXdJakkwTUNBeU5EQWlJR1pwYkd3OUl6VmtOV05rWlNJK1BIQmhkR2dnWkQwaVRqVXNOQzR4SURJek5TNDBMakUxSURJek5TNDNMamN6SURJek5TNHhNQ0F5TXpRdU9EQXpJREV4Tmk0MVFqTXhOUzR6TkRBZ056TXVORGd6SURNd0xqa3lNeUF6TUM0NU1qTWdNekF1T1RJemVpSWdabWxzYkQwaUkzWm1abVptWmlJdlBqeHBiR3gxYzNSeVlYUnBiMjRnWXoxaWFXNWhjaWhoSUdGdWFXMWhkR2x2Ymoxb2IzWmxjaWwrUEM5cGJHeDFjM1J5WVhScGIyNCtQQzl6ZG1jKyIsInNpemVzIjoiMjQweDI0MCIsInR5cGUiOiJpbWFnZS9zdmcreG1sIn1dfQ==">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Cairo', sans-serif;
+        }
+
+        .tooltip {
+            position: relative;
+        }
+        
+        .tooltip:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        .tooltip-text {
+            visibility: hidden;
+            opacity: 0;
+            position: absolute;
+            z-index: 1000;
+            background-color: #333;
+            color: white;
+            text-align: center;
+            padding: 5px 10px;
+            border-radius: 6px;
+            transition: opacity 0.3s;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+
+        .slide-in {
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .mobile-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+        }
+
+        @media (min-width: 768px) {
+            .mobile-nav {
+                display: none !important;
+            }
+        }
+
+        .desktop-nav {
+            display: block;
+        }
+
+        @media (max-width: 767px) {
+            .desktop-nav {
+                display: none;
+            }
+        }
+
+        .status-waiting { @apply bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200; }
+        .status-examining { @apply bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200; }
+        .status-done { @apply bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200; }
+        .status-cancelled { @apply bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200; }
+        .status-return { @apply bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200; }
+
+        .field-required::after {
+            content: "*";
+            color: red;
+            margin-right: 2px;
+        }
+
+        .connection-status {
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            z-index: 1000;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            color: white;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .connection-online {
+            background-color: #10b981;
+        }
+
+        .connection-offline {
+            background-color: #ef4444;
+        }
+
+        .loading-spinner {
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #3498db;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#5d5cde',
+                        secondary: '#64748b',
+                        success: '#10b981',
+                        warning: '#f59e0b',
+                        error: '#ef4444',
+                        info: '#3b82f6'
+                    },
+                    fontFamily: {
+                        cairo: ['Cairo', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-cairo">
+    <!-- Connection Status -->
+    <div id="connectionStatus" class="connection-status connection-online">
+        🌐 متصل
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toast-container" class="fixed top-4 right-4 z-[1001] space-y-2"></div>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-xl w-full max-w-md">
+            <div class="text-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white">تسجيل الدخول</h2>
+                <p class="text-gray-600 dark:text-gray-400 mt-2">نظام إدارة المواعيد الطبية</p>
+            </div>
+            <form id="loginForm">
+                <div class="mb-4">
+                    <label for="username" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        اسم المستخدم
+                    </label>
+                    <input type="text" id="username" name="username" required
+                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white dark:bg-gray-700 text-base">
+                </div>
+                <div class="mb-6">
+                    <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        كلمة المرور
+                    </label>
+                    <input type="password" id="password" name="password" required
+                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white dark:bg-gray-700 text-base">
+                </div>
+                <button type="submit" class="w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-primary/90 transition-colors">
+                    دخول
+                </button>
+            </form>
+            <div class="mt-4 p-3 bg-gray-100 dark:bg-gray-700 rounded text-xs">
+                <strong>بيانات تجريبية:</strong><br>
+                المستخدم: admin<br>
+                كلمة المرور: admin
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App Container -->
+    <div id="appContainer" class="hidden min-h-screen">
+        <!-- Header -->
+        <header class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 desktop-nav">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center h-16">
+                    <div class="flex items-center space-x-4 space-x-reverse">
+                        <h1 class="text-xl font-bold text-gray-900 dark:text-white">نظام إدارة المواعيد الطبية</h1>
+                        <span id="userRole" class="px-2 py-1 text-xs bg-primary text-white rounded-full"></span>
+                    </div>
+                    <div class="flex items-center space-x-4 space-x-reverse">
+                        <span id="syncStatus" class="flex items-center space-x-2 space-x-reverse text-sm text-gray-600 dark:text-gray-400">
+                            <div class="loading-spinner hidden" id="syncSpinner"></div>
+                            <span id="syncText">آخر مزامنة: الآن</span>
+                        </span>
+                        <button id="logoutBtn" class="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 desktop-nav">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex space-x-8 space-x-reverse">
+                    <button class="nav-item active py-3 px-1 border-b-2 border-primary text-primary font-medium text-sm" data-page="appointments">
+                        📅 المواعيد
+                    </button>
+                    <button class="nav-item py-3 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 font-medium text-sm" data-page="patients">
+                        👥 المرضى
+                    </button>
+                    <button class="nav-item py-3 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 font-medium text-sm" data-page="users">
+                        👤 المستخدمين
+                    </button>
+                    <button class="nav-item py-3 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 font-medium text-sm" data-page="reports">
+                        📊 التقارير
+                    </button>
+                    <button class="nav-item py-3 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 font-medium text-sm" data-page="settings">
+                        ⚙️ الإعدادات
+                    </button>
+                    <button class="nav-item py-3 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 font-medium text-sm" data-page="data-management">
+                        🗃️ إدارة البيانات
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Mobile Navigation -->
+        <nav class="mobile-nav bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-4 py-2">
+            <div class="flex justify-around">
+                <button class="mobile-nav-item flex flex-col items-center space-y-1 p-2 rounded active" data-page="appointments">
+                    <span class="text-lg">📅</span>
+                    <span class="text-xs">المواعيد</span>
+                </button>
+                <button class="mobile-nav-item flex flex-col items-center space-y-1 p-2 rounded" data-page="patients">
+                    <span class="text-lg">👥</span>
+                    <span class="text-xs">المرضى</span>
+                </button>
+                <button class="mobile-nav-item flex flex-col items-center space-y-1 p-2 rounded" data-page="users">
+                    <span class="text-lg">👤</span>
+                    <span class="text-xs">المستخدمين</span>
+                </button>
+                <button class="mobile-nav-item flex flex-col items-center space-y-1 p-2 rounded" data-page="reports">
+                    <span class="text-lg">📊</span>
+                    <span class="text-xs">التقارير</span>
+                </button>
+                <button class="mobile-nav-item flex flex-col items-center space-y-1 p-2 rounded" data-page="settings">
+                    <span class="text-lg">⚙️</span>
+                    <span class="text-xs">الإعدادات</span>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Content Area -->
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-20 md:pb-6">
+            <!-- Appointments Page -->
+            <div id="appointmentsPage" class="page active">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 space-y-4 md:space-y-0">
+                    <h2 class="text-2xl font-bold text-gray-900 dark:text-white">إدارة المواعيد</h2>
+                    <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 sm:space-x-reverse w-full md:w-auto">
+                        <input type="text" id="appointmentSearch" placeholder="بحث في المواعيد..." 
+                               class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-white dark:bg-gray-700 text-base">
+                        <button id="addAppointmentBtn" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors whitespace-nowrap">
+                            ➕ موعد جديد
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Appointments Filters -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-6">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <select id="statusFilter" class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white dark:bg-gray-700">
+                            <option value="">جميع الحالات</option>
+                            <option value="waiting">في الانتظار</option>
+                            <option value="examining">قيد الفحص</option>
+                            <option value="done">تم الانتهاء</option>
+                            <option value="cancelled">ملغي</option>
+                            <option value="return">عودة</option>
+                        </select>
+                        <input type="date" id="dateFilter" 
+                               class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white dark:bg-gray-700">
+                        <select id="doctorFilter" class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white dark:bg-gray-700">
+                            <option value="">جميع الأطباء</option>
+                        </select>
+                        <button id="clearFilters" class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors">
+                            مسح الفلاتر
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Appointments List -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                            <thead class="bg-gray-50 dark:bg-gray-700">
+                                <tr>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">الرقم</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">المريض</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">التاريخ والوقت</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">الطبيب</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">الحالة</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">الرسوم</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="appointmentsList" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Patients Page -->
+            <div id="patientsPage" class="page hidden">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 space-y-4 md:space-y-0">
+                    <h2 class="text-2xl font-bold text-gray-900 dark:text-white">إدارة المرضى</h2>
+                    <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 sm:space-x-reverse w-full md:w-auto">
+                        <input type="text" id="patientSearch" placeholder="بحث في المرضى..." 
+                               class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-white dark:bg-gray-700 text-base">
+                        <button id="addPatientBtn" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors whitespace-nowrap">
+                            ➕ مريض جديد
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Patients List -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                            <thead class="bg-gray-50 dark:bg-gray-700">
+                                <tr>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">الرقم</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">الاسم</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">رقم الهاتف</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">العمر</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">الجنس</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">المواعيد</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="patientsList" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Users Page -->
+            <div id="usersPage" class="page hidden">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 space-y-4 md:space-y-0">
+                    <h2 class="text-2xl font-bold text-gray-900 dark:text-white">إدارة المستخدمين</h2>
+                    <button id="addUserBtn" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors">
+                        ➕ مستخدم جديد
+                    </button>
+                </div>
+
+                <!-- Users List -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                            <thead class="bg-gray-50 dark:bg-gray-700">
+                                <tr>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">اسم المستخدم</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">الاسم الكامل</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">الدور</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">نشط</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">تاريخ الإنشاء</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersList" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reports Page -->
+            <div id="reportsPage" class="page hidden">
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">التقارير والإحصائيات</h2>
+                
+                <!-- Report Filters -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
+                    <h3 class="text-lg font-semibold mb-4">فلاتر التقرير</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">من تاريخ</label>
+                            <input type="date" id="reportFromDate" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white dark:bg-gray-700">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">إلى تاريخ</label>
+                            <input type="date" id="reportToDate" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white dark:bg-gray-700">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">الطبيب</label>
+                            <select id="reportDoctorFilter" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white dark:bg-gray-700">
+                                <option value="">جميع الأطباء</option>
+                            </select>
+                        </div>
+                        <div class="flex items-end">
+                            <button id="generateReport" class="w-full bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90 transition-colors">
+                                إنشاء التقرير
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Statistics Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <div class="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
+                                    <span class="text-blue-600 dark:text-blue-300">📅</span>
+                                </div>
+                            </div>
+                            <div class="mr-4">
+                                <p class="text-sm text-gray-600 dark:text-gray-400">إجمالي المواعيد</p>
+                                <p id="totalAppointments" class="text-2xl font-bold text-gray-900 dark:text-white">0</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <div class="w-8 h-8 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
+                                    <span class="text-green-600 dark:text-green-300">✅</span>
+                                </div>
+                            </div>
+                            <div class="mr-4">
+                                <p class="text-sm text-gray-600 dark:text-gray-400">مواعيد مكتملة</p>
+                                <p id="completedAppointments" class="text-2xl font-bold text-gray-900 dark:text-white">0</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <div class="w-8 h-8 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center">
+                                    <span class="text-purple-600 dark:text-purple-300">👥</span>
+                                </div>
+                            </div>
+                            <div class="mr-4">
+                                <p class="text-sm text-gray-600 dark:text-gray-400">عدد المرضى</p>
+                                <p id="totalPatients" class="text-2xl font-bold text-gray-900 dark:text-white">0</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <div class="w-8 h-8 bg-yellow-100 dark:bg-yellow-900 rounded-full flex items-center justify-center">
+                                    <span class="text-yellow-600 dark:text-yellow-300">💰</span>
+                                </div>
+                            </div>
+                            <div class="mr-4">
+                                <p class="text-sm text-gray-600 dark:text-gray-400">إجمالي الإيرادات</p>
+                                <p id="totalRevenue" class="text-2xl font-bold text-gray-900 dark:text-white">0 ريال</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Export Buttons -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                    <h3 class="text-lg font-semibold mb-4">تصدير البيانات</h3>
+                    <div class="flex flex-wrap gap-4">
+                        <button id="exportCSV" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors">
+                            📊 تصدير CSV
+                        </button>
+                        <button id="exportPDF" class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors">
+                            📄 تصدير PDF
+                        </button>
+                        <button id="printReport" class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors">
+                            🖨️ طباعة
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Page -->
+            <div id="settingsPage" class="page hidden">
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">الإعدادات</h2>
+                
+                <!-- Settings Tabs -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
+                    <div class="border-b border-gray-200 dark:border-gray-700">
+                        <nav class="flex space-x-8 space-x-reverse px-6" aria-label="Tabs">
+                            <button class="settings-tab active py-4 px-1 border-b-2 border-primary text-primary font-medium text-sm" data-tab="clinic">
+                                إعدادات العيادة
+                            </button>
+                            <button class="settings-tab py-4 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 font-medium text-sm" data-tab="appointment-fields">
+                                حقول المواعيد
+                            </button>
+                            <button class="settings-tab py-4 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 font-medium text-sm" data-tab="permissions">
+                                الصلاحيات
+                            </button>
+                            <button class="settings-tab py-4 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 font-medium text-sm" data-tab="sync">
+                                المزامنة
+                            </button>
+                        </nav>
+                    </div>
+
+                    <div class="p-6">
+                        <!-- Clinic Settings Tab -->
+                        <div id="clinicSettingsTab" class="settings-content">
+                            <h3 class="text-lg font-semibold mb-4">إعدادات العيادة</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">اسم العيادة</label>
+                                    <input type="text" id="clinicName" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white dark:bg-gray-700 text-base" value="عيادة الطب العام">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">مدة الموعد (بالدقائق)</label>
+                                    <input type="number" id="appointmentDuration" min="5" max="120" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white dark:bg-gray-700" value="30">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">فترة العودة المجانية (بالأيام)</label>
+                                    <input type="number" id="returnPeriod" min="1" max="30" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white dark:bg-gray-700" value="7">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">رسوم الكشف الافتراضية</label>
+                                    <input type="number" id="defaultFee" min="0" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white dark:bg-gray-700" value="100">
+                                </div>
+                            </div>
+                            <button id="saveClinicSettings" class="mt-6 bg-primary text-white px-6 py-2 rounded-md hover:bg-primary/90 transition-colors">
+                                حفظ الإعدادات
+                            </button>
+                        </div>
+
+                        <!-- Appointment Fields Settings Tab -->
+                        <div id="appointmentFieldsTab" class="settings-content hidden">
+                            <h3 class="text-lg font-semibold mb-4">إعدادات حقول المواعيد</h3>
+                            <div class="space-y-4">
+                                <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                                    <h4 class="font-medium mb-3">الحقول المتاحة</h4>
+                                    <div id="appointmentFieldsList" class="space-y-2">
+                                        <!-- Will be populated by JavaScript -->
+                                    </div>
+                                    <button id="addAppointmentField" class="mt-4 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors">
+                                        ➕ إضافة حقل جديد
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Permissions Tab -->
+                        <div id="permissionsTab" class="settings-content hidden">
+                            <h3 class="text-lg font-semibold mb-4">إعدادات الصلاحيات</h3>
+                            <div class="space-y-6">
+                                <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                                    <h4 class="font-medium mb-3">صلاحيات الأدوار</h4>
+                                    <div id="rolePermissionsList" class="space-y-4">
+                                        <!-- Will be populated by JavaScript -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sync Settings Tab -->
+                        <div id="syncSettingsTab" class="settings-content hidden">
+                            <h3 class="text-lg font-semibold mb-4">إعدادات المزامنة</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">فترة المزامنة التلقائية (بالثواني)</label>
+                                    <input type="number" id="syncInterval" min="10" max="300" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white dark:bg-gray-700" value="30">
+                                </div>
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="autoSync" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded" checked>
+                                    <label for="autoSync" class="mr-2 block text-sm text-gray-900 dark:text-gray-100">
+                                        تفعيل المزامنة التلقائية
+                                    </label>
+                                </div>
+                            </div>
+                            <button id="saveSyncSettings" class="mt-6 bg-primary text-white px-6 py-2 rounded-md hover:bg-primary/90 transition-colors">
+                                حفظ إعدادات المزامنة
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data Management Page -->
+            <div id="dataManagementPage" class="page hidden">
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">إدارة البيانات</h2>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Backup & Restore -->
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                        <h3 class="text-lg font-semibold mb-4">النسخ الاحتياطي والاستعادة</h3>
+                        <div class="space-y-4">
+                            <button id="createBackup" class="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">
+                                📦 إنشاء نسخة احتياطية
+                            </button>
+                            <div>
+                                <label class="block text-sm font-medium mb-2">استعادة من ملف</label>
+                                <input type="file" id="restoreFile" accept=".json" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white dark:bg-gray-700">
+                                <button id="restoreBackup" class="mt-2 w-full bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors">
+                                    📥 استعادة البيانات
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- External Database Connection -->
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                        <h3 class="text-lg font-semibold mb-4">الاتصال بقواعد البيانات الخارجية</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-2">نوع قاعدة البيانات</label>
+                                <select id="dbType" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white dark:bg-gray-700">
+                                    <option value="">اختر نوع قاعدة البيانات</option>
+                                    <option value="firebase">Firebase</option>
+                                    <option value="sheets">Google Sheets</option>
+                                    <option value="mysql">MySQL</option>
+                                    <option value="api">REST API</option>
+                                </select>
+                            </div>
+                            <div id="dbConfig" class="space-y-3 hidden">
+                                <!-- Configuration fields will be added dynamically -->
+                            </div>
+                            <div class="flex space-x-2 space-x-reverse">
+                                <button id="testConnection" class="flex-1 bg-yellow-600 text-white px-4 py-2 rounded-md hover:bg-yellow-700 transition-colors">
+                                    🔗 اختبار الاتصال
+                                </button>
+                                <button id="saveDbConfig" class="flex-1 bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90 transition-colors">
+                                    💾 حفظ الإعدادات
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Data Export/Import -->
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                        <h3 class="text-lg font-semibold mb-4">تصدير واستيراد البيانات</h3>
+                        <div class="space-y-4">
+                            <div class="grid grid-cols-2 gap-2">
+                                <button id="exportAllData" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors text-sm">
+                                    📊 تصدير جميع البيانات
+                                </button>
+                                <button id="exportAppointments" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors text-sm">
+                                    📅 تصدير المواعيد
+                                </button>
+                                <button id="exportPatients" class="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition-colors text-sm">
+                                    👥 تصدير المرضى
+                                </button>
+                                <button id="exportUsers" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors text-sm">
+                                    👤 تصدير المستخدمين
+                                </button>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-2">استيراد البيانات</label>
+                                <input type="file" id="importFile" accept=".json,.csv" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white dark:bg-gray-700">
+                                <button id="importData" class="mt-2 w-full bg-orange-600 text-white px-4 py-2 rounded-md hover:bg-orange-700 transition-colors">
+                                    📥 استيراد البيانات
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Data Synchronization -->
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                        <h3 class="text-lg font-semibold mb-4">مزامنة البيانات</h3>
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded">
+                                <span>آخر مزامنة:</span>
+                                <span id="lastSyncTime" class="text-sm text-gray-600 dark:text-gray-400">لم تتم بعد</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <button id="syncNow" class="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90 transition-colors">
+                                    🔄 مزامنة الآن
+                                </button>
+                                <button id="forceSyncAll" class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors">
+                                    ⚡ مزامنة إجبارية
+                                </button>
+                            </div>
+                            <div class="text-xs text-gray-600 dark:text-gray-400">
+                                ملاحظة: المزامنة الإجبارية ستعيد كتابة جميع البيانات المحلية
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data Cleanup -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mt-6">
+                    <h3 class="text-lg font-semibold mb-4">تنظيف البيانات</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <button id="clearOldAppointments" class="bg-yellow-600 text-white px-4 py-2 rounded-md hover:bg-yellow-700 transition-colors">
+                            🗑️ حذف المواعيد القديمة
+                        </button>
+                        <button id="clearAllData" class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors">
+                            ⚠️ حذف جميع البيانات
+                        </button>
+                        <button id="resetSystem" class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors">
+                            🔄 إعادة تعيين النظام
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <!-- Add/Edit Appointment Modal -->
+    <div id="appointmentModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto custom-scrollbar">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 id="appointmentModalTitle" class="text-xl font-bold text-gray-900 dark:text-white">موعد جديد</h3>
+                    <button id="closeAppointmentModal" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <form id="appointmentForm" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-2 field-required">المريض</label>
+                            <div class="flex space-x-2 space-x-reverse">
+                                <select id="appointmentPatient" required class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white dark:bg-gray-700">
+                                    <option value="">اختر المريض</option>
+                                </select>
+                                <button type="button" id="quickAddPatient" class="px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors">
+                                    ➕
+                                </button>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2 field-required">التاريخ</label>
+                            <input type="date" id="appointmentDate" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white dark:bg-gray-700">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2 field-required">الوقت</label>
+                            <input type="time" id="appointmentTime" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white dark:bg-gray-700">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2 field-required">الطبيب</label>
+                            <select id="appointmentDoctor" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white dark:bg-gray-700">
+                                <option value="">اختر الطبيب</option>
+                                <option value="د. أحمد محمد">د. أحمد محمد</option>
+                                <option value="د. فاطمة علي">د. فاطمة علي</option>
+                                <option value="د. محمد حسن">د. محمد حسن</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">الحالة</label>
+                            <select id="appointmentStatus" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white dark:bg-gray-700">
+                                <option value="waiting">في الانتظار</option>
+                                <option value="examining">قيد الفحص</option>
+                                <option value="done">تم الانتهاء</option>
+                                <option value="cancelled">ملغي</option>
+                                <option value="return">عودة</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">الرسوم</label>
+                            <input type="number" id="appointmentFee" min="0" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white dark:bg-gray-700" value="100">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">ملاحظات</label>
+                        <textarea id="appointmentNotes" rows="3" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white dark:bg-gray-700 resize-none"></textarea>
+                    </div>
+                    <div class="flex justify-end space-x-4 space-x-reverse pt-4">
+                        <button type="button" id="cancelAppointmentModal" class="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200">
+                            إلغاء
+                        </button>
+                        <button type="submit" class="bg-primary text-white px-6 py-2 rounded-md hover:bg-primary/90 transition-colors">
+                            حفظ
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Patient Modal -->
+    <div id="patientModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto custom-scrollbar">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 id="patientModalTitle" class="text-xl font-bold text-gray-900 dark:text-white">مريض جديد</h3>
+                    <button id="closePatientModal" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <form id="patientForm" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-2 field-required">الاسم الكامل</label>
+                            <input type="text" id="patientName" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white dark:bg-gray-700 text-base">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2 field-required">رقم الهاتف</label>
+                            <input type="tel" id="patientPhone" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white dark:bg-gray-700 text-base">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">العمر</label>
+                            <input type="number" id="patientAge" min="0" max="120" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white dark:bg-gray-700">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">الجنس</label>
+                            <select id="patientGender" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white dark:bg-gray-700">
+                                <option value="">اختر الجنس</option>
+                                <option value="male">ذكر</option>
+                                <option value="female">أنثى</option>
+                            </select>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium mb-2">العنوان</label>
+                            <input type="text" id="patientAddress" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white dark:bg-gray-700 text-base">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">ملاحظات طبية</label>
+                        <textarea id="patientNotes" rows="3" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white dark:bg-gray-700 resize-none"></textarea>
+                    </div>
+                    <div class="flex justify-end space-x-4 space-x-reverse pt-4">
+                        <button type="button" id="cancelPatientModal" class="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200">
+                            إلغاء
+                        </button>
+                        <button type="submit" class="bg-primary text-white px-6 py-2 rounded-md hover:bg-primary/90 transition-colors">
+                            حفظ
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit User Modal -->
+    <div id="userModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-lg">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 id="userModalTitle" class="text-xl font-bold text-gray-900 dark:text-white">مستخدم جديد</h3>
+                    <button id="closeUserModal" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <form id="userForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2 field-required">اسم المستخدم</label>
+                        <input type="text" id="userName" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white dark:bg-gray-700 text-base">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2 field-required">الاسم الكامل</label>
+                        <input type="text" id="userFullName" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white dark:bg-gray-700 text-base">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2 field-required">كلمة المرور</label>
+                        <input type="password" id="userPassword" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white dark:bg-gray-700 text-base">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2 field-required">الدور</label>
+                        <select id="userRole" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white dark:bg-gray-700">
+                            <option value="">اختر الدور</option>
+                            <option value="admin">مدير</option>
+                            <option value="doctor">طبيب</option>
+                            <option value="receptionist">موظف استقبال</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="userActive" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded" checked>
+                        <label for="userActive" class="mr-2 block text-sm text-gray-900 dark:text-gray-100">
+                            مستخدم نشط
+                        </label>
+                    </div>
+                    <div class="flex justify-end space-x-4 space-x-reverse pt-4">
+                        <button type="button" id="cancelUserModal" class="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200">
+                            إلغاء
+                        </button>
+                        <button type="submit" class="bg-primary text-white px-6 py-2 rounded-md hover:bg-primary/90 transition-colors">
+                            حفظ
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Add Patient Modal -->
+    <div id="quickPatientModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold text-gray-900 dark:text-white">إضافة مريض سريع</h3>
+                    <button id="closeQuickPatientModal" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <form id="quickPatientForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2 field-required">الاسم الكامل</label>
+                        <input type="text" id="quickPatientName" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white dark:bg-gray-700 text-base">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2 field-required">رقم الهاتف</label>
+                        <input type="tel" id="quickPatientPhone" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white dark:bg-gray-700 text-base">
+                    </div>
+                    <div class="flex justify-end space-x-4 space-x-reverse pt-4">
+                        <button type="button" id="cancelQuickPatientModal" class="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200">
+                            إلغاء
+                        </button>
+                        <button type="submit" class="bg-primary text-white px-6 py-2 rounded-md hover:bg-primary/90 transition-colors">
+                            إضافة واختيار
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmationModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md">
+            <div class="p-6">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">تأكيد العملية</h3>
+                <p id="confirmationMessage" class="text-gray-600 dark:text-gray-400 mb-6"></p>
+                <div class="flex justify-end space-x-4 space-x-reverse">
+                    <button id="cancelConfirmation" class="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200">
+                        إلغاء
+                    </button>
+                    <button id="confirmAction" class="bg-red-600 text-white px-6 py-2 rounded-md hover:bg-red-700 transition-colors">
+                        تأكيد
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentUser = null;
+        let appointments = [];
+        let patients = [];
+        let users = [];
+        let settings = {
+            clinic: {
+                name: 'عيادة الطب العام',
+                appointmentDuration: 30,
+                returnPeriod: 7,
+                defaultFee: 100
+            },
+            appointmentFields: [
+                { name: 'patient', label: 'المريض', type: 'select', required: true, enabled: true },
+                { name: 'date', label: 'التاريخ', type: 'date', required: true, enabled: true },
+                { name: 'time', label: 'الوقت', type: 'time', required: true, enabled: true },
+                { name: 'doctor', label: 'الطبيب', type: 'select', required: true, enabled: true },
+                { name: 'status', label: 'الحالة', type: 'select', required: false, enabled: true },
+                { name: 'fee', label: 'الرسوم', type: 'number', required: false, enabled: true },
+                { name: 'notes', label: 'الملاحظات', type: 'textarea', required: false, enabled: true }
+            ],
+            permissions: {
+                admin: ['all'],
+                doctor: ['appointments_view', 'appointments_edit', 'patients_view', 'patients_edit'],
+                receptionist: ['appointments_view', 'appointments_add', 'patients_view', 'patients_add']
+            },
+            sync: {
+                interval: 30,
+                autoSync: true,
+                lastSync: null
+            },
+            database: {
+                type: '',
+                config: {}
+            }
+        };
+        let editingId = null;
+        let editingType = null;
+        let syncInterval = null;
+
+        // IndexedDB helper
+        class IndexedDBHelper {
+            constructor() {
+                this.dbName = 'MedicalAppointmentsDB';
+                this.version = 1;
+                this.db = null;
+            }
+
+            async init() {
+                return new Promise((resolve, reject) => {
+                    const request = indexedDB.open(this.dbName, this.version);
+                    
+                    request.onerror = () => reject(request.error);
+                    request.onsuccess = () => {
+                        this.db = request.result;
+                        resolve();
+                    };
+                    
+                    request.onupgradeneeded = (event) => {
+                        const db = event.target.result;
+                        
+                        // Create object stores
+                        if (!db.objectStoreNames.contains('appointments')) {
+                            db.createObjectStore('appointments', { keyPath: 'id', autoIncrement: true });
+                        }
+                        if (!db.objectStoreNames.contains('patients')) {
+                            db.createObjectStore('patients', { keyPath: 'id', autoIncrement: true });
+                        }
+                        if (!db.objectStoreNames.contains('users')) {
+                            db.createObjectStore('users', { keyPath: 'id', autoIncrement: true });
+                        }
+                        if (!db.objectStoreNames.contains('settings')) {
+                            db.createObjectStore('settings', { keyPath: 'key' });
+                        }
+                    };
+                });
+            }
+
+            async getAll(storeName) {
+                return new Promise((resolve, reject) => {
+                    const transaction = this.db.transaction([storeName], 'readonly');
+                    const store = transaction.objectStore(storeName);
+                    const request = store.getAll();
+                    
+                    request.onerror = () => reject(request.error);
+                    request.onsuccess = () => resolve(request.result);
+                });
+            }
+
+            async add(storeName, data) {
+                return new Promise((resolve, reject) => {
+                    const transaction = this.db.transaction([storeName], 'readwrite');
+                    const store = transaction.objectStore(storeName);
+                    const request = store.add(data);
+                    
+                    request.onerror = () => reject(request.error);
+                    request.onsuccess = () => resolve(request.result);
+                });
+            }
+
+            async update(storeName, data) {
+                return new Promise((resolve, reject) => {
+                    const transaction = this.db.transaction([storeName], 'readwrite');
+                    const store = transaction.objectStore(storeName);
+                    const request = store.put(data);
+                    
+                    request.onerror = () => reject(request.error);
+                    request.onsuccess = () => resolve(request.result);
+                });
+            }
+
+            async delete(storeName, id) {
+                return new Promise((resolve, reject) => {
+                    const transaction = this.db.transaction([storeName], 'readwrite');
+                    const store = transaction.objectStore(storeName);
+                    const request = store.delete(id);
+                    
+                    request.onerror = () => reject(request.error);
+                    request.onsuccess = () => resolve(request.result);
+                });
+            }
+
+            async clear(storeName) {
+                return new Promise((resolve, reject) => {
+                    const transaction = this.db.transaction([storeName], 'readwrite');
+                    const store = transaction.objectStore(storeName);
+                    const request = store.clear();
+                    
+                    request.onerror = () => reject(request.error);
+                    request.onsuccess = () => resolve(request.result);
+                });
+            }
+        }
+
+        const dbHelper = new IndexedDBHelper();
+
+        // Initialize app
+        async function initApp() {
+            try {
+                // Initialize database
+                await dbHelper.init();
+                
+                // Load data from IndexedDB
+                await loadDataFromDB();
+                
+                // Initialize default data if needed
+                await initializeDefaultData();
+                
+                // Setup event listeners
+                setupEventListeners();
+                
+                // Setup PWA
+                setupPWA();
+                
+                // Setup dark mode
+                setupDarkMode();
+                
+                // Start sync if enabled
+                if (settings.sync.autoSync) {
+                    startAutoSync();
+                }
+                
+                showToast('تم تحميل النظام بنجاح', 'success');
+            } catch (error) {
+                console.error('Error initializing app:', error);
+                showToast('خطأ في تحميل النظام', 'error');
+            }
+        }
+
+        // Load data from IndexedDB
+        async function loadDataFromDB() {
+            try {
+                appointments = await dbHelper.getAll('appointments');
+                patients = await dbHelper.getAll('patients');
+                users = await dbHelper.getAll('users');
+                
+                // Load settings
+                const settingsData = await dbHelper.getAll('settings');
+                settingsData.forEach(item => {
+                    settings[item.key] = item.value;
+                });
+            } catch (error) {
+                console.error('Error loading data from DB:', error);
+            }
+        }
+
+        // Save data to IndexedDB
+        async function saveDataToDB() {
+            try {
+                // Save settings
+                for (const [key, value] of Object.entries(settings)) {
+                    await dbHelper.update('settings', { key, value });
+                }
+            } catch (error) {
+                console.error('Error saving data to DB:', error);
+            }
+        }
+
+        // Initialize default data
+        async function initializeDefaultData() {
+            // Initialize default users if empty
+            if (users.length === 0) {
+                const defaultUsers = [
+                    {
+                        username: 'admin',
+                        password: 'admin',
+                        fullName: 'مدير النظام',
+                        role: 'admin',
+                        active: true,
+                        createdAt: new Date().toISOString()
+                    },
+                    {
+                        username: 'doctor1',
+                        password: 'doctor',
+                        fullName: 'د. أحمد محمد',
+                        role: 'doctor',
+                        active: true,
+                        createdAt: new Date().toISOString()
+                    },
+                    {
+                        username: 'receptionist1',
+                        password: 'receptionist',
+                        fullName: 'موظف الاستقبال',
+                        role: 'receptionist',
+                        active: true,
+                        createdAt: new Date().toISOString()
+                    }
+                ];
+
+                for (const user of defaultUsers) {
+                    await dbHelper.add('users', user);
+                }
+                users = await dbHelper.getAll('users');
+            }
+
+            // Initialize sample patients if empty
+            if (patients.length === 0) {
+                const samplePatients = [
+                    {
+                        name: 'أحمد علي محمد',
+                        phone: '0501234567',
+                        age: 35,
+                        gender: 'male',
+                        address: 'الرياض، المملكة العربية السعودية',
+                        notes: '',
+                        createdAt: new Date().toISOString()
+                    },
+                    {
+                        name: 'فاطمة سعد أحمد',
+                        phone: '0507654321',
+                        age: 28,
+                        gender: 'female',
+                        address: 'جدة، المملكة العربية السعودية',
+                        notes: 'مريضة بالسكري',
+                        createdAt: new Date().toISOString()
+                    }
+                ];
+
+                for (const patient of samplePatients) {
+                    await dbHelper.add('patients', patient);
+                }
+                patients = await dbHelper.getAll('patients');
+            }
+
+            // Save initial settings
+            await saveDataToDB();
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Login form
+            document.getElementById('loginForm').addEventListener('submit', handleLogin);
+            
+            // Logout
+            document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+            
+            // Navigation
+            document.querySelectorAll('.nav-item, .mobile-nav-item').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    const page = e.currentTarget.dataset.page;
+                    switchPage(page);
+                });
+            });
+
+            // Search inputs
+            document.getElementById('appointmentSearch').addEventListener('input', filterAppointments);
+            document.getElementById('patientSearch').addEventListener('input', filterPatients);
+
+            // Filter controls
+            document.getElementById('statusFilter').addEventListener('change', filterAppointments);
+            document.getElementById('dateFilter').addEventListener('change', filterAppointments);
+            document.getElementById('doctorFilter').addEventListener('change', filterAppointments);
+            document.getElementById('clearFilters').addEventListener('click', clearFilters);
+
+            // Add buttons
+            document.getElementById('addAppointmentBtn').addEventListener('click', () => openAppointmentModal());
+            document.getElementById('addPatientBtn').addEventListener('click', () => openPatientModal());
+            document.getElementById('addUserBtn').addEventListener('click', () => openUserModal());
+
+            // Modal handlers
+            setupModalHandlers();
+
+            // Settings tabs
+            document.querySelectorAll('.settings-tab').forEach(tab => {
+                tab.addEventListener('click', (e) => {
+                    const tabName = e.target.dataset.tab;
+                    switchSettingsTab(tabName);
+                });
+            });
+
+            // Settings forms
+            document.getElementById('saveClinicSettings').addEventListener('click', saveClinicSettings);
+            document.getElementById('saveSyncSettings').addEventListener('click', saveSyncSettings);
+
+            // Data management
+            setupDataManagementHandlers();
+
+            // Report generation
+            document.getElementById('generateReport').addEventListener('click', generateReport);
+
+            // Keyboard shortcuts
+            document.addEventListener('keydown', handleKeyboardShortcuts);
+
+            // Connection status
+            window.addEventListener('online', updateConnectionStatus);
+            window.addEventListener('offline', updateConnectionStatus);
+        }
+
+        // Setup modal handlers
+        function setupModalHandlers() {
+            // Appointment modal
+            document.getElementById('closeAppointmentModal').addEventListener('click', closeAppointmentModal);
+            document.getElementById('cancelAppointmentModal').addEventListener('click', closeAppointmentModal);
+            document.getElementById('appointmentForm').addEventListener('submit', handleAppointmentSubmit);
+            document.getElementById('quickAddPatient').addEventListener('click', openQuickPatientModal);
+
+            // Patient modal
+            document.getElementById('closePatientModal').addEventListener('click', closePatientModal);
+            document.getElementById('cancelPatientModal').addEventListener('click', closePatientModal);
+            document.getElementById('patientForm').addEventListener('submit', handlePatientSubmit);
+
+            // User modal
+            document.getElementById('closeUserModal').addEventListener('click', closeUserModal);
+            document.getElementById('cancelUserModal').addEventListener('click', closeUserModal);
+            document.getElementById('userForm').addEventListener('submit', handleUserSubmit);
+
+            // Quick patient modal
+            document.getElementById('closeQuickPatientModal').addEventListener('click', closeQuickPatientModal);
+            document.getElementById('cancelQuickPatientModal').addEventListener('click', closeQuickPatientModal);
+            document.getElementById('quickPatientForm').addEventListener('submit', handleQuickPatientSubmit);
+
+            // Confirmation modal
+            document.getElementById('cancelConfirmation').addEventListener('click', closeConfirmationModal);
+        }
+
+        // Setup data management handlers
+        function setupDataManagementHandlers() {
+            // Backup & Restore
+            document.getElementById('createBackup').addEventListener('click', createBackup);
+            document.getElementById('restoreBackup').addEventListener('click', restoreBackup);
+
+            // Database configuration
+            document.getElementById('dbType').addEventListener('change', handleDbTypeChange);
+            document.getElementById('testConnection').addEventListener('click', testDatabaseConnection);
+            document.getElementById('saveDbConfig').addEventListener('click', saveDatabaseConfig);
+
+            // Data export
+            document.getElementById('exportAllData').addEventListener('click', () => exportData('all'));
+            document.getElementById('exportAppointments').addEventListener('click', () => exportData('appointments'));
+            document.getElementById('exportPatients').addEventListener('click', () => exportData('patients'));
+            document.getElementById('exportUsers').addEventListener('click', () => exportData('users'));
+
+            // Data import
+            document.getElementById('importData').addEventListener('click', importData);
+
+            // Data sync
+            document.getElementById('syncNow').addEventListener('click', syncNow);
+            document.getElementById('forceSyncAll').addEventListener('click', forceSyncAll);
+
+            // Data cleanup
+            document.getElementById('clearOldAppointments').addEventListener('click', clearOldAppointments);
+            document.getElementById('clearAllData').addEventListener('click', clearAllData);
+            document.getElementById('resetSystem').addEventListener('click', resetSystem);
+        }
+
+        // Handle login
+        async function handleLogin(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            const user = users.find(u => u.username === username && u.password === password && u.active);
+            
+            if (user) {
+                currentUser = user;
+                document.getElementById('loginModal').classList.add('hidden');
+                document.getElementById('appContainer').classList.remove('hidden');
+                document.getElementById('userRole').textContent = getRoleLabel(user.role);
+                
+                // Initialize data displays
+                refreshAllData();
+                
+                showToast(`مرحباً ${user.fullName}`, 'success');
+            } else {
+                showToast('بيانات دخول غير صحيحة', 'error');
+            }
+        }
+
+        // Handle logout
+        function handleLogout() {
+            currentUser = null;
+            document.getElementById('loginModal').classList.remove('hidden');
+            document.getElementById('appContainer').classList.add('hidden');
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+        }
+
+        // Get role label
+        function getRoleLabel(role) {
+            const labels = {
+                admin: 'مدير',
+                doctor: 'طبيب',
+                receptionist: 'موظف استقبال'
+            };
+            return labels[role] || role;
+        }
+
+        // Check permissions
+        function hasPermission(permission) {
+            if (!currentUser) return false;
+            if (currentUser.role === 'admin') return true;
+            
+            const rolePermissions = settings.permissions[currentUser.role] || [];
+            return rolePermissions.includes(permission) || rolePermissions.includes('all');
+        }
+
+        // Switch page
+        function switchPage(pageName) {
+            // Hide all pages
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.add('hidden');
+                page.classList.remove('active');
+            });
+
+            // Show selected page
+            const targetPage = document.getElementById(pageName + 'Page');
+            if (targetPage) {
+                targetPage.classList.remove('hidden');
+                targetPage.classList.add('active');
+            }
+
+            // Update navigation
+            document.querySelectorAll('.nav-item, .mobile-nav-item').forEach(item => {
+                item.classList.remove('active');
+                if (item.dataset.page === pageName) {
+                    item.classList.add('active');
+                }
+            });
+
+            // Refresh data based on page
+            if (pageName === 'appointments') {
+                renderAppointments();
+            } else if (pageName === 'patients') {
+                renderPatients();
+            } else if (pageName === 'users') {
+                renderUsers();
+            } else if (pageName === 'reports') {
+                updateReportStats();
+            } else if (pageName === 'settings') {
+                populateSettings();
+            }
+        }
+
+        // Refresh all data
+        function refreshAllData() {
+            renderAppointments();
+            renderPatients();
+            renderUsers();
+            populatePatientSelects();
+            populateDoctorSelects();
+            updateReportStats();
+        }
+
+        // Render appointments
+        function renderAppointments() {
+            const tbody = document.getElementById('appointmentsList');
+            tbody.innerHTML = '';
+
+            // Sort appointments by creation order (newest first)
+            const sortedAppointments = [...appointments].sort((a, b) => {
+                return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+            });
+
+            sortedAppointments.forEach((appointment, index) => {
+                const patient = patients.find(p => p.id === appointment.patientId);
+                const patientName = patient ? patient.name : 'مريض غير معروف';
+                
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50 dark:hover:bg-gray-700';
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">${index + 1}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">${patientName}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">${formatDateTime(appointment.date, appointment.time)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">${appointment.doctor}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full status-${appointment.status}">
+                            ${getStatusLabel(appointment.status)}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">${appointment.fee || 0} ريال</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm space-x-2 space-x-reverse">
+                        <button onclick="editAppointment(${appointment.id})" class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">
+                            ✏️
+                        </button>
+                        <button onclick="deleteAppointment(${appointment.id})" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">
+                            🗑️
+                        </button>
+                        ${appointment.status === 'waiting' ? `<button onclick="startExamination(${appointment.id})" class="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300">▶️</button>` : ''}
+                        ${appointment.status === 'examining' ? `<button onclick="completeAppointment(${appointment.id})" class="text-purple-600 hover:text-purple-900 dark:text-purple-400 dark:hover:text-purple-300">✅</button>` : ''}
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Render patients
+        function renderPatients() {
+            const tbody = document.getElementById('patientsList');
+            tbody.innerHTML = '';
+
+            // Sort patients by creation order (newest first)
+            const sortedPatients = [...patients].sort((a, b) => {
+                return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+            });
+
+            sortedPatients.forEach((patient, index) => {
+                const patientAppointments = appointments.filter(a => a.patientId === patient.id);
+                
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50 dark:hover:bg-gray-700';
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">${index + 1}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">${patient.name}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">${patient.phone}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">${patient.age || '-'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">${getGenderLabel(patient.gender)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">${patientAppointments.length}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm space-x-2 space-x-reverse">
+                        <button onclick="editPatient(${patient.id})" class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">
+                            ✏️
+                        </button>
+                        <button onclick="deletePatient(${patient.id})" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">
+                            🗑️
+                        </button>
+                        <button onclick="addAppointmentForPatient(${patient.id})" class="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300">
+                            📅
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Render users
+        function renderUsers() {
+            const tbody = document.getElementById('usersList');
+            tbody.innerHTML = '';
+
+            // Sort users by creation order (newest first)
+            const sortedUsers = [...users].sort((a, b) => {
+                return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+            });
+
+            sortedUsers.forEach(user => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50 dark:hover:bg-gray-700';
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">${user.username}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">${user.fullName}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">${getRoleLabel(user.role)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${user.active ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'}">
+                            ${user.active ? 'نشط' : 'غير نشط'}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">${formatDate(user.createdAt)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm space-x-2 space-x-reverse">
+                        <button onclick="editUser(${user.id})" class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">
+                            ✏️
+                        </button>
+                        ${user.username !== 'admin' ? `<button onclick="deleteUser(${user.id})" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">🗑️</button>` : ''}
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Appointment modal functions
+        function openAppointmentModal(appointmentId = null) {
+            editingId = appointmentId;
+            editingType = 'appointment';
+            
+            const modal = document.getElementById('appointmentModal');
+            const title = document.getElementById('appointmentModalTitle');
+            const form = document.getElementById('appointmentForm');
+            
+            if (appointmentId) {
+                const appointment = appointments.find(a => a.id === appointmentId);
+                if (appointment) {
+                    title.textContent = 'تعديل موعد';
+                    populateAppointmentForm(appointment);
+                }
+            } else {
+                title.textContent = 'موعد جديد';
+                form.reset();
+                // Set default values
+                document.getElementById('appointmentDate').value = new Date().toISOString().split('T')[0];
+                document.getElementById('appointmentFee').value = settings.clinic.defaultFee;
+            }
+            
+            populatePatientSelects();
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeAppointmentModal() {
+            const modal = document.getElementById('appointmentModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            editingId = null;
+            editingType = null;
+        }
+
+        function populateAppointmentForm(appointment) {
+            document.getElementById('appointmentPatient').value = appointment.patientId;
+            document.getElementById('appointmentDate').value = appointment.date;
+            document.getElementById('appointmentTime').value = appointment.time;
+            document.getElementById('appointmentDoctor').value = appointment.doctor;
+            document.getElementById('appointmentStatus').value = appointment.status;
+            document.getElementById('appointmentFee').value = appointment.fee || 0;
+            document.getElementById('appointmentNotes').value = appointment.notes || '';
+        }
+
+        async function handleAppointmentSubmit(e) {
+            e.preventDefault();
+            
+            const appointmentData = {
+                patientId: parseInt(document.getElementById('appointmentPatient').value),
+                date: document.getElementById('appointmentDate').value,
+                time: document.getElementById('appointmentTime').value,
+                doctor: document.getElementById('appointmentDoctor').value,
+                status: document.getElementById('appointmentStatus').value,
+                fee: parseFloat(document.getElementById('appointmentFee').value) || 0,
+                notes: document.getElementById('appointmentNotes').value
+            };
+
+            try {
+                if (editingId) {
+                    // Update existing appointment
+                    appointmentData.id = editingId;
+                    await dbHelper.update('appointments', appointmentData);
+                    
+                    const index = appointments.findIndex(a => a.id === editingId);
+                    if (index !== -1) {
+                        appointments[index] = appointmentData;
+                    }
+                    
+                    showToast('تم تحديث الموعد بنجاح', 'success');
+                } else {
+                    // Add new appointment
+                    appointmentData.createdAt = new Date().toISOString();
+                    const id = await dbHelper.add('appointments', appointmentData);
+                    appointmentData.id = id;
+                    appointments.push(appointmentData);
+                    
+                    showToast('تم إضافة الموعد بنجاح', 'success');
+                }
+                
+                renderAppointments();
+                closeAppointmentModal();
+                updateReportStats();
+            } catch (error) {
+                console.error('Error saving appointment:', error);
+                showToast('خطأ في حفظ الموعد', 'error');
+            }
+        }
+
+        // Patient modal functions
+        function openPatientModal(patientId = null) {
+            editingId = patientId;
+            editingType = 'patient';
+            
+            const modal = document.getElementById('patientModal');
+            const title = document.getElementById('patientModalTitle');
+            const form = document.getElementById('patientForm');
+            
+            if (patientId) {
+                const patient = patients.find(p => p.id === patientId);
+                if (patient) {
+                    title.textContent = 'تعديل مريض';
+                    populatePatientForm(patient);
+                }
+            } else {
+                title.textContent = 'مريض جديد';
+                form.reset();
+            }
+            
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closePatientModal() {
+            const modal = document.getElementById('patientModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            editingId = null;
+            editingType = null;
+        }
+
+        function populatePatientForm(patient) {
+            document.getElementById('patientName').value = patient.name;
+            document.getElementById('patientPhone').value = patient.phone;
+            document.getElementById('patientAge').value = patient.age || '';
+            document.getElementById('patientGender').value = patient.gender || '';
+            document.getElementById('patientAddress').value = patient.address || '';
+            document.getElementById('patientNotes').value = patient.notes || '';
+        }
+
+        async function handlePatientSubmit(e) {
+            e.preventDefault();
+            
+            const patientData = {
+                name: document.getElementById('patientName').value,
+                phone: document.getElementById('patientPhone').value,
+                age: parseInt(document.getElementById('patientAge').value) || null,
+                gender: document.getElementById('patientGender').value,
+                address: document.getElementById('patientAddress').value,
+                notes: document.getElementById('patientNotes').value
+            };
+
+            try {
+                if (editingId) {
+                    // Update existing patient
+                    patientData.id = editingId;
+                    await dbHelper.update('patients', patientData);
+                    
+                    const index = patients.findIndex(p => p.id === editingId);
+                    if (index !== -1) {
+                        patients[index] = patientData;
+                    }
+                    
+                    showToast('تم تحديث بيانات المريض بنجاح', 'success');
+                } else {
+                    // Add new patient
+                    patientData.createdAt = new Date().toISOString();
+                    const id = await dbHelper.add('patients', patientData);
+                    patientData.id = id;
+                    patients.push(patientData);
+                    
+                    showToast('تم إضافة المريض بنجاح', 'success');
+                }
+                
+                renderPatients();
+                populatePatientSelects();
+                closePatientModal();
+                updateReportStats();
+            } catch (error) {
+                console.error('Error saving patient:', error);
+                showToast('خطأ في حفظ بيانات المريض', 'error');
+            }
+        }
+
+        // User modal functions
+        function openUserModal(userId = null) {
+            editingId = userId;
+            editingType = 'user';
+            
+            const modal = document.getElementById('userModal');
+            const title = document.getElementById('userModalTitle');
+            const form = document.getElementById('userForm');
+            
+            if (userId) {
+                const user = users.find(u => u.id === userId);
+                if (user) {
+                    title.textContent = 'تعديل مستخدم';
+                    populateUserForm(user);
+                }
+            } else {
+                title.textContent = 'مستخدم جديد';
+                form.reset();
+                document.getElementById('userActive').checked = true;
+            }
+            
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeUserModal() {
+            const modal = document.getElementById('userModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            editingId = null;
+            editingType = null;
+        }
+
+        function populateUserForm(user) {
+            document.getElementById('userName').value = user.username;
+            document.getElementById('userFullName').value = user.fullName;
+            document.getElementById('userPassword').value = user.password;
+            document.getElementById('userRole').value = user.role;
+            document.getElementById('userActive').checked = user.active;
+        }
+
+        async function handleUserSubmit(e) {
+            e.preventDefault();
+            
+            const userData = {
+                username: document.getElementById('userName').value,
+                fullName: document.getElementById('userFullName').value,
+                password: document.getElementById('userPassword').value,
+                role: document.getElementById('userRole').value,
+                active: document.getElementById('userActive').checked
+            };
+
+            try {
+                if (editingId) {
+                    // Update existing user
+                    userData.id = editingId;
+                    await dbHelper.update('users', userData);
+                    
+                    const index = users.findIndex(u => u.id === editingId);
+                    if (index !== -1) {
+                        users[index] = { ...users[index], ...userData };
+                    }
+                    
+                    showToast('تم تحديث بيانات المستخدم بنجاح', 'success');
+                } else {
+                    // Check if username already exists
+                    if (users.find(u => u.username === userData.username)) {
+                        showToast('اسم المستخدم موجود بالفعل', 'error');
+                        return;
+                    }
+                    
+                    // Add new user
+                    userData.createdAt = new Date().toISOString();
+                    const id = await dbHelper.add('users', userData);
+                    userData.id = id;
+                    users.push(userData);
+                    
+                    showToast('تم إضافة المستخدم بنجاح', 'success');
+                }
+                
+                renderUsers();
+                closeUserModal();
+            } catch (error) {
+                console.error('Error saving user:', error);
+                showToast('خطأ في حفظ بيانات المستخدم', 'error');
+            }
+        }
+
+        // Quick patient modal functions
+        function openQuickPatientModal() {
+            const modal = document.getElementById('quickPatientModal');
+            document.getElementById('quickPatientForm').reset();
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeQuickPatientModal() {
+            const modal = document.getElementById('quickPatientModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        async function handleQuickPatientSubmit(e) {
+            e.preventDefault();
+            
+            const patientData = {
+                name: document.getElementById('quickPatientName').value,
+                phone: document.getElementById('quickPatientPhone').value,
+                createdAt: new Date().toISOString()
+            };
+
+            try {
+                const id = await dbHelper.add('patients', patientData);
+                patientData.id = id;
+                patients.push(patientData);
+                
+                populatePatientSelects();
+                document.getElementById('appointmentPatient').value = id;
+                
+                closeQuickPatientModal();
+                showToast('تم إضافة المريض بنجاح', 'success');
+            } catch (error) {
+                console.error('Error saving quick patient:', error);
+                showToast('خطأ في إضافة المريض', 'error');
+            }
+        }
+
+        // Edit functions
+        function editAppointment(id) {
+            openAppointmentModal(id);
+        }
+
+        function editPatient(id) {
+            openPatientModal(id);
+        }
+
+        function editUser(id) {
+            openUserModal(id);
+        }
+
+        // Delete functions
+        function deleteAppointment(id) {
+            showConfirmation('هل أنت متأكد من حذف هذا الموعد؟', async () => {
+                try {
+                    await dbHelper.delete('appointments', id);
+                    appointments = appointments.filter(a => a.id !== id);
+                    renderAppointments();
+                    updateReportStats();
+                    showToast('تم حذف الموعد بنجاح', 'success');
+                } catch (error) {
+                    console.error('Error deleting appointment:', error);
+                    showToast('خطأ في حذف الموعد', 'error');
+                }
+            });
+        }
+
+        function deletePatient(id) {
+            const patientAppointments = appointments.filter(a => a.patientId === id);
+            if (patientAppointments.length > 0) {
+                showToast('لا يمكن حذف المريض لوجود مواعيد مرتبطة به', 'error');
+                return;
+            }
+
+            showConfirmation('هل أنت متأكد من حذف هذا المريض؟', async () => {
+                try {
+                    await dbHelper.delete('patients', id);
+                    patients = patients.filter(p => p.id !== id);
+                    renderPatients();
+                    populatePatientSelects();
+                    updateReportStats();
+                    showToast('تم حذف المريض بنجاح', 'success');
+                } catch (error) {
+                    console.error('Error deleting patient:', error);
+                    showToast('خطأ في حذف المريض', 'error');
+                }
+            });
+        }
+
+        function deleteUser(id) {
+            const user = users.find(u => u.id === id);
+            if (user && user.username === 'admin') {
+                showToast('لا يمكن حذف المدير الرئيسي', 'error');
+                return;
+            }
+
+            showConfirmation('هل أنت متأكد من حذف هذا المستخدم؟', async () => {
+                try {
+                    await dbHelper.delete('users', id);
+                    users = users.filter(u => u.id !== id);
+                    renderUsers();
+                    showToast('تم حذف المستخدم بنجاح', 'success');
+                } catch (error) {
+                    console.error('Error deleting user:', error);
+                    showToast('خطأ في حذف المستخدم', 'error');
+                }
+            });
+        }
+
+        // Appointment status functions
+        async function startExamination(id) {
+            try {
+                const appointment = appointments.find(a => a.id === id);
+                if (appointment) {
+                    appointment.status = 'examining';
+                    await dbHelper.update('appointments', appointment);
+                    renderAppointments();
+                    showToast('تم بدء الفحص', 'success');
+                }
+            } catch (error) {
+                console.error('Error starting examination:', error);
+                showToast('خطأ في تحديث حالة الموعد', 'error');
+            }
+        }
+
+        async function completeAppointment(id) {
+            try {
+                const appointment = appointments.find(a => a.id === id);
+                if (appointment) {
+                    appointment.status = 'done';
+                    await dbHelper.update('appointments', appointment);
+                    renderAppointments();
+                    showToast('تم إنهاء الموعد', 'success');
+                }
+            } catch (error) {
+                console.error('Error completing appointment:', error);
+                showToast('خطأ في تحديث حالة الموعد', 'error');
+            }
+        }
+
+        // Add appointment for patient
+        function addAppointmentForPatient(patientId) {
+            openAppointmentModal();
+            setTimeout(() => {
+                document.getElementById('appointmentPatient').value = patientId;
+            }, 100);
+        }
+
+        // Filter functions
+        function filterAppointments() {
+            const searchTerm = document.getElementById('appointmentSearch').value.toLowerCase();
+            const statusFilter = document.getElementById('statusFilter').value;
+            const dateFilter = document.getElementById('dateFilter').value;
+            const doctorFilter = document.getElementById('doctorFilter').value;
+
+            const tbody = document.getElementById('appointmentsList');
+            const rows = tbody.querySelectorAll('tr');
+
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                if (cells.length === 0) return;
+
+                const patientName = cells[1].textContent.toLowerCase();
+                const appointmentDate = cells[2].textContent;
+                const doctor = cells[3].textContent;
+                const status = cells[4].querySelector('span').classList[2].split('-')[1];
+
+                let show = true;
+
+                if (searchTerm && !patientName.includes(searchTerm)) {
+                    show = false;
+                }
+
+                if (statusFilter && status !== statusFilter) {
+                    show = false;
+                }
+
+                if (dateFilter && !appointmentDate.includes(dateFilter)) {
+                    show = false;
+                }
+
+                if (doctorFilter && doctor !== doctorFilter) {
+                    show = false;
+                }
+
+                row.style.display = show ? '' : 'none';
+            });
+        }
+
+        function filterPatients() {
+            const searchTerm = document.getElementById('patientSearch').value.toLowerCase();
+            const tbody = document.getElementById('patientsList');
+            const rows = tbody.querySelectorAll('tr');
+
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                if (cells.length === 0) return;
+
+                const patientName = cells[1].textContent.toLowerCase();
+                const patientPhone = cells[2].textContent.toLowerCase();
+
+                const show = patientName.includes(searchTerm) || patientPhone.includes(searchTerm);
+                row.style.display = show ? '' : 'none';
+            });
+        }
+
+        function clearFilters() {
+            document.getElementById('statusFilter').value = '';
+            document.getElementById('dateFilter').value = '';
+            document.getElementById('doctorFilter').value = '';
+            filterAppointments();
+        }
+
+        // Populate select elements
+        function populatePatientSelects() {
+            const selects = document.querySelectorAll('#appointmentPatient');
+            selects.forEach(select => {
+                const currentValue = select.value;
+                select.innerHTML = '<option value="">اختر المريض</option>';
+                
+                patients.forEach(patient => {
+                    const option = document.createElement('option');
+                    option.value = patient.id;
+                    option.textContent = patient.name;
+                    select.appendChild(option);
+                });
+                
+                if (currentValue) {
+                    select.value = currentValue;
+                }
+            });
+        }
+
+        function populateDoctorSelects() {
+            const selects = document.querySelectorAll('#doctorFilter, #reportDoctorFilter');
+            selects.forEach(select => {
+                const doctors = ['د. أحمد محمد', 'د. فاطمة علي', 'د. محمد حسن'];
+                const currentValue = select.value;
+                
+                if (select.id.includes('Filter')) {
+                    select.innerHTML = '<option value="">جميع الأطباء</option>';
+                }
+                
+                doctors.forEach(doctor => {
+                    const option = document.createElement('option');
+                    option.value = doctor;
+                    option.textContent = doctor;
+                    select.appendChild(option);
+                });
+                
+                if (currentValue) {
+                    select.value = currentValue;
+                }
+            });
+        }
+
+        // Settings functions
+        function switchSettingsTab(tabName) {
+            // Update tabs
+            document.querySelectorAll('.settings-tab').forEach(tab => {
+                tab.classList.remove('active', 'border-primary', 'text-primary');
+                tab.classList.add('border-transparent', 'text-gray-500');
+                if (tab.dataset.tab === tabName) {
+                    tab.classList.add('active', 'border-primary', 'text-primary');
+                    tab.classList.remove('border-transparent', 'text-gray-500');
+                }
+            });
+
+            // Update content
+            document.querySelectorAll('.settings-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+            document.getElementById(tabName + 'Tab').classList.remove('hidden');
+        }
+
+        function populateSettings() {
+            // Clinic settings
+            document.getElementById('clinicName').value = settings.clinic.name;
+            document.getElementById('appointmentDuration').value = settings.clinic.appointmentDuration;
+            document.getElementById('returnPeriod').value = settings.clinic.returnPeriod;
+            document.getElementById('defaultFee').value = settings.clinic.defaultFee;
+
+            // Sync settings
+            document.getElementById('syncInterval').value = settings.sync.interval;
+            document.getElementById('autoSync').checked = settings.sync.autoSync;
+
+            // Populate appointment fields
+            populateAppointmentFields();
+
+            // Populate permissions
+            populatePermissions();
+        }
+
+        function populateAppointmentFields() {
+            const container = document.getElementById('appointmentFieldsList');
+            container.innerHTML = '';
+
+            settings.appointmentFields.forEach((field, index) => {
+                const fieldDiv = document.createElement('div');
+                fieldDiv.className = 'flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded border';
+                fieldDiv.innerHTML = `
+                    <div class="flex items-center space-x-3 space-x-reverse">
+                        <input type="checkbox" ${field.enabled ? 'checked' : ''} 
+                               onchange="toggleAppointmentField(${index}, this.checked)"
+                               class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                        <span class="font-medium">${field.label}</span>
+                        <span class="text-xs text-gray-500">(${field.type})</span>
+                        ${field.required ? '<span class="text-red-500 text-xs">*</span>' : ''}
+                    </div>
+                    <div class="flex space-x-2 space-x-reverse">
+                        <button onclick="editAppointmentField(${index})" class="text-blue-600 hover:text-blue-800">✏️</button>
+                        ${!field.required ? `<button onclick="removeAppointmentField(${index})" class="text-red-600 hover:text-red-800">🗑️</button>` : ''}
+                    </div>
+                `;
+                container.appendChild(fieldDiv);
+            });
+        }
+
+        function populatePermissions() {
+            const container = document.getElementById('rolePermissionsList');
+            container.innerHTML = '';
+
+            const allPermissions = [
+                'appointments_view', 'appointments_add', 'appointments_edit', 'appointments_delete',
+                'patients_view', 'patients_add', 'patients_edit', 'patients_delete',
+                'users_view', 'users_add', 'users_edit', 'users_delete',
+                'reports_view', 'settings_edit', 'data_management'
+            ];
+
+            Object.keys(settings.permissions).forEach(role => {
+                const roleDiv = document.createElement('div');
+                roleDiv.className = 'p-4 bg-white dark:bg-gray-800 rounded border';
+                
+                let permissionsHTML = '';
+                allPermissions.forEach(permission => {
+                    const hasPermission = settings.permissions[role].includes(permission) || settings.permissions[role].includes('all');
+                    permissionsHTML += `
+                        <label class="flex items-center space-x-2 space-x-reverse">
+                            <input type="checkbox" ${hasPermission ? 'checked' : ''} 
+                                   onchange="togglePermission('${role}', '${permission}', this.checked)"
+                                   class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                            <span class="text-sm">${getPermissionLabel(permission)}</span>
+                        </label>
+                    `;
+                });
+
+                roleDiv.innerHTML = `
+                    <h5 class="font-medium mb-3">${getRoleLabel(role)}</h5>
+                    <div class="grid grid-cols-2 gap-2">
+                        ${permissionsHTML}
+                    </div>
+                `;
+                container.appendChild(roleDiv);
+            });
+        }
+
+        function getPermissionLabel(permission) {
+            const labels = {
+                'appointments_view': 'عرض المواعيد',
+                'appointments_add': 'إضافة مواعيد',
+                'appointments_edit': 'تعديل المواعيد',
+                'appointments_delete': 'حذف المواعيد',
+                'patients_view': 'عرض المرضى',
+                'patients_add': 'إضافة مرضى',
+                'patients_edit': 'تعديل المرضى',
+                'patients_delete': 'حذف المرضى',
+                'users_view': 'عرض المستخدمين',
+                'users_add': 'إضافة مستخدمين',
+                'users_edit': 'تعديل المستخدمين',
+                'users_delete': 'حذف المستخدمين',
+                'reports_view': 'عرض التقارير',
+                'settings_edit': 'تعديل الإعدادات',
+                'data_management': 'إدارة البيانات'
+            };
+            return labels[permission] || permission;
+        }
+
+        async function saveClinicSettings() {
+            settings.clinic.name = document.getElementById('clinicName').value;
+            settings.clinic.appointmentDuration = parseInt(document.getElementById('appointmentDuration').value);
+            settings.clinic.returnPeriod = parseInt(document.getElementById('returnPeriod').value);
+            settings.clinic.defaultFee = parseFloat(document.getElementById('defaultFee').value);
+
+            await saveDataToDB();
+            showToast('تم حفظ إعدادات العيادة بنجاح', 'success');
+        }
+
+        async function saveSyncSettings() {
+            const newInterval = parseInt(document.getElementById('syncInterval').value);
+            const autoSync = document.getElementById('autoSync').checked;
+
+            settings.sync.interval = newInterval;
+            settings.sync.autoSync = autoSync;
+
+            await saveDataToDB();
+
+            // Restart sync if settings changed
+            if (syncInterval) {
+                clearInterval(syncInterval);
+                syncInterval = null;
+            }
+
+            if (autoSync) {
+                startAutoSync();
+            }
+
+            showToast('تم حفظ إعدادات المزامنة بنجاح', 'success');
+        }
+
+        // Reports functions
+        function updateReportStats() {
+            document.getElementById('totalAppointments').textContent = appointments.length;
+            document.getElementById('completedAppointments').textContent = appointments.filter(a => a.status === 'done').length;
+            document.getElementById('totalPatients').textContent = patients.length;
+            
+            const totalRevenue = appointments
+                .filter(a => a.status === 'done')
+                .reduce((sum, a) => sum + (parseFloat(a.fee) || 0), 0);
+            document.getElementById('totalRevenue').textContent = `${totalRevenue} ريال`;
+        }
+
+        function generateReport() {
+            const fromDate = document.getElementById('reportFromDate').value;
+            const toDate = document.getElementById('reportToDate').value;
+            const doctor = document.getElementById('reportDoctorFilter').value;
+
+            let filteredAppointments = [...appointments];
+
+            if (fromDate) {
+                filteredAppointments = filteredAppointments.filter(a => a.date >= fromDate);
+            }
+
+            if (toDate) {
+                filteredAppointments = filteredAppointments.filter(a => a.date <= toDate);
+            }
+
+            if (doctor) {
+                filteredAppointments = filteredAppointments.filter(a => a.doctor === doctor);
+            }
+
+            // Update stats with filtered data
+            document.getElementById('totalAppointments').textContent = filteredAppointments.length;
+            document.getElementById('completedAppointments').textContent = filteredAppointments.filter(a => a.status === 'done').length;
+            
+            const filteredRevenue = filteredAppointments
+                .filter(a => a.status === 'done')
+                .reduce((sum, a) => sum + (parseFloat(a.fee) || 0), 0);
+            document.getElementById('totalRevenue').textContent = `${filteredRevenue} ريال`;
+
+            showToast('تم إنشاء التقرير بنجاح', 'success');
+        }
+
+        // Data management functions
+        function createBackup() {
+            const backupData = {
+                version: '1.0',
+                timestamp: new Date().toISOString(),
+                appointments,
+                patients,
+                users,
+                settings
+            };
+
+            const dataStr = JSON.stringify(backupData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `backup_${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+
+            showToast('تم إنشاء النسخة الاحتياطية بنجاح', 'success');
+        }
+
+        async function restoreBackup() {
+            const fileInput = document.getElementById('restoreFile');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                showToast('يرجى اختيار ملف للاستعادة', 'error');
+                return;
+            }
+
+            try {
+                const text = await file.text();
+                const backupData = JSON.parse(text);
+
+                // Validate backup data
+                if (!backupData.version || !backupData.appointments || !backupData.patients || !backupData.users) {
+                    throw new Error('ملف النسخة الاحتياطية غير صالح');
+                }
+
+                showConfirmation('هل أنت متأكد من استعادة البيانات؟ سيتم استبدال جميع البيانات الحالية.', async () => {
+                    try {
+                        // Clear existing data
+                        await dbHelper.clear('appointments');
+                        await dbHelper.clear('patients');
+                        await dbHelper.clear('users');
+                        await dbHelper.clear('settings');
+
+                        // Restore data
+                        for (const appointment of backupData.appointments) {
+                            await dbHelper.add('appointments', appointment);
+                        }
+                        for (const patient of backupData.patients) {
+                            await dbHelper.add('patients', patient);
+                        }
+                        for (const user of backupData.users) {
+                            await dbHelper.add('users', user);
+                        }
+
+                        // Restore settings
+                        if (backupData.settings) {
+                            settings = backupData.settings;
+                            await saveDataToDB();
+                        }
+
+                        // Reload data
+                        await loadDataFromDB();
+                        refreshAllData();
+
+                        showToast('تم استعادة البيانات بنجاح', 'success');
+                        fileInput.value = '';
+                    } catch (error) {
+                        console.error('Error restoring backup:', error);
+                        showToast('خطأ في استعادة البيانات', 'error');
+                    }
+                });
+            } catch (error) {
+                console.error('Error reading backup file:', error);
+                showToast('خطأ في قراءة ملف النسخة الاحتياطية', 'error');
+            }
+        }
+
+        function exportData(type) {
+            let data, filename;
+
+            switch (type) {
+                case 'all':
+                    data = { appointments, patients, users, settings };
+                    filename = 'all_data.json';
+                    break;
+                case 'appointments':
+                    data = appointments.map(a => {
+                        const patient = patients.find(p => p.id === a.patientId);
+                        return {
+                            ...a,
+                            patientName: patient ? patient.name : 'غير معروف'
+                        };
+                    });
+                    filename = 'appointments.json';
+                    break;
+                case 'patients':
+                    data = patients;
+                    filename = 'patients.json';
+                    break;
+                case 'users':
+                    data = users.map(u => ({
+                        username: u.username,
+                        fullName: u.fullName,
+                        role: u.role,
+                        active: u.active,
+                        createdAt: u.createdAt
+                    }));
+                    filename = 'users.json';
+                    break;
+            }
+
+            const dataStr = JSON.stringify(data, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+
+            showToast('تم تصدير البيانات بنجاح', 'success');
+        }
+
+        async function importData() {
+            const fileInput = document.getElementById('importFile');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                showToast('يرجى اختيار ملف للاستيراد', 'error');
+                return;
+            }
+
+            try {
+                const text = await file.text();
+                const importData = JSON.parse(text);
+
+                showConfirmation('هل أنت متأكد من استيراد البيانات؟', async () => {
+                    try {
+                        // Handle different import formats
+                        if (Array.isArray(importData)) {
+                            // Simple array format
+                            if (file.name.includes('appointment')) {
+                                for (const item of importData) {
+                                    await dbHelper.add('appointments', { ...item, createdAt: new Date().toISOString() });
+                                }
+                            } else if (file.name.includes('patient')) {
+                                for (const item of importData) {
+                                    await dbHelper.add('patients', { ...item, createdAt: new Date().toISOString() });
+                                }
+                            }
+                        } else if (importData.appointments || importData.patients || importData.users) {
+                            // Full export format
+                            if (importData.appointments) {
+                                for (const item of importData.appointments) {
+                                    await dbHelper.add('appointments', item);
+                                }
+                            }
+                            if (importData.patients) {
+                                for (const item of importData.patients) {
+                                    await dbHelper.add('patients', item);
+                                }
+                            }
+                            if (importData.users) {
+                                for (const item of importData.users) {
+                                    await dbHelper.add('users', item);
+                                }
+                            }
+                        }
+
+                        await loadDataFromDB();
+                        refreshAllData();
+                        showToast('تم استيراد البيانات بنجاح', 'success');
+                        fileInput.value = '';
+                    } catch (error) {
+                        console.error('Error importing data:', error);
+                        showToast('خطأ في استيراد البيانات', 'error');
+                    }
+                });
+            } catch (error) {
+                console.error('Error reading import file:', error);
+                showToast('خطأ في قراءة ملف الاستيراد', 'error');
+            }
+        }
+
+        // Database configuration functions
+        function handleDbTypeChange() {
+            const dbType = document.getElementById('dbType').value;
+            const configContainer = document.getElementById('dbConfig');
+
+            if (!dbType) {
+                configContainer.classList.add('hidden');
+                return;
+            }
+
+            configContainer.classList.remove('hidden');
+            configContainer.innerHTML = '';
+
+            let configFields = [];
+
+            switch (dbType) {
+                case 'firebase':
+                    configFields = [
+                        { label: 'API Key', name: 'apiKey', type: 'text', required: true },
+                        { label: 'Auth Domain', name: 'authDomain', type: 'text', required: true },
+                        { label: 'Project ID', name: 'projectId', type: 'text', required: true },
+                        { label: 'Storage Bucket', name: 'storageBucket', type: 'text' },
+                        { label: 'Messaging Sender ID', name: 'messagingSenderId', type: 'text' },
+                        { label: 'App ID', name: 'appId', type: 'text', required: true }
+                    ];
+                    break;
+                case 'sheets':
+                    configFields = [
+                        { label: 'Spreadsheet ID', name: 'spreadsheetId', type: 'text', required: true },
+                        { label: 'API Key', name: 'apiKey', type: 'text', required: true }
+                    ];
+                    break;
+                case 'mysql':
+                    configFields = [
+                        { label: 'Host', name: 'host', type: 'text', required: true },
+                        { label: 'Port', name: 'port', type: 'number', value: '3306' },
+                        { label: 'Database', name: 'database', type: 'text', required: true },
+                        { label: 'Username', name: 'username', type: 'text', required: true },
+                        { label: 'Password', name: 'password', type: 'password', required: true }
+                    ];
+                    break;
+                case 'api':
+                    configFields = [
+                        { label: 'Base URL', name: 'baseUrl', type: 'url', required: true },
+                        { label: 'API Key', name: 'apiKey', type: 'text' },
+                        { label: 'Username', name: 'username', type: 'text' },
+                        { label: 'Password', name: 'password', type: 'password' }
+                    ];
+                    break;
+            }
+
+            configFields.forEach(field => {
+                const div = document.createElement('div');
+                div.innerHTML = `
+                    <label class="block text-sm font-medium mb-1">${field.label}${field.required ? ' *' : ''}</label>
+                    <input type="${field.type}" name="${field.name}" ${field.required ? 'required' : ''} 
+                           value="${field.value || ''}"
+                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white dark:bg-gray-700 text-base">
+                `;
+                configContainer.appendChild(div);
+            });
+        }
+
+        async function testDatabaseConnection() {
+            const dbType = document.getElementById('dbType').value;
+            if (!dbType) {
+                showToast('يرجى اختيار نوع قاعدة البيانات', 'error');
+                return;
+            }
+
+            const configContainer = document.getElementById('dbConfig');
+            const inputs = configContainer.querySelectorAll('input');
+            const config = {};
+
+            inputs.forEach(input => {
+                config[input.name] = input.value;
+            });
+
+            // Simulate connection test
+            showToast('جاري اختبار الاتصال...', 'info');
+            
+            setTimeout(() => {
+                // This is a simulation - in a real app, you would make actual API calls
+                const success = Math.random() > 0.3; // 70% success rate for demo
+                
+                if (success) {
+                    showToast('تم الاتصال بنجاح! ✅', 'success');
+                } else {
+                    showToast('فشل في الاتصال. يرجى التحقق من البيانات', 'error');
+                }
+            }, 2000);
+        }
+
+        async function saveDatabaseConfig() {
+            const dbType = document.getElementById('dbType').value;
+            if (!dbType) {
+                showToast('يرجى اختيار نوع قاعدة البيانات', 'error');
+                return;
+            }
+
+            const configContainer = document.getElementById('dbConfig');
+            const inputs = configContainer.querySelectorAll('input');
+            const config = {};
+
+            inputs.forEach(input => {
+                config[input.name] = input.value;
+            });
+
+            settings.database.type = dbType;
+            settings.database.config = config;
+
+            await saveDataToDB();
+            showToast('تم حفظ إعدادات قاعدة البيانات بنجاح', 'success');
+        }
+
+        // Sync functions
+        function startAutoSync() {
+            if (syncInterval) {
+                clearInterval(syncInterval);
+            }
+
+            syncInterval = setInterval(() => {
+                performSync();
+            }, settings.sync.interval * 1000);
+        }
+
+        async function syncNow() {
+            await performSync();
+            showToast('تم إجراء المزامنة بنجاح', 'success');
+        }
+
+        async function forceSyncAll() {
+            showConfirmation('هل أنت متأكد من إجراء مزامنة إجبارية؟ سيتم إعادة كتابة جميع البيانات المحلية.', async () => {
+                await performSync(true);
+                showToast('تم إجراء المزامنة الإجبارية بنجاح', 'success');
+            });
+        }
+
+        async function performSync(force = false) {
+            const syncSpinner = document.getElementById('syncSpinner');
+            const syncText = document.getElementById('syncText');
+
+            syncSpinner.classList.remove('hidden');
+            syncText.textContent = 'جاري المزامنة...';
+
+            try {
+                // Simulate sync process
+                await new Promise(resolve => setTimeout(resolve, 1000));
+
+                settings.sync.lastSync = new Date().toISOString();
+                await saveDataToDB();
+
+                syncText.textContent = `آخر مزامنة: ${formatTime(new Date())}`;
+                document.getElementById('lastSyncTime').textContent = formatDateTime(new Date());
+            } catch (error) {
+                console.error('Sync error:', error);
+                syncText.textContent = 'خطأ في المزامنة';
+            } finally {
+                syncSpinner.classList.add('hidden');
+            }
+        }
+
+        // Data cleanup functions
+        function clearOldAppointments() {
+            showConfirmation('هل أنت متأكد من حذف المواعيد القديمة (أكثر من 6 أشهر)؟', async () => {
+                try {
+                    const sixMonthsAgo = new Date();
+                    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+                    const cutoffDate = sixMonthsAgo.toISOString().split('T')[0];
+
+                    const appointmentsToDelete = appointments.filter(a => a.date < cutoffDate);
+                    
+                    for (const appointment of appointmentsToDelete) {
+                        await dbHelper.delete('appointments', appointment.id);
+                    }
+
+                    appointments = appointments.filter(a => a.date >= cutoffDate);
+                    renderAppointments();
+                    updateReportStats();
+
+                    showToast(`تم حذف ${appointmentsToDelete.length} موعد قديم`, 'success');
+                } catch (error) {
+                    console.error('Error clearing old appointments:', error);
+                    showToast('خطأ في حذف المواعيد القديمة', 'error');
+                }
+            });
+        }
+
+        function clearAllData() {
+            showConfirmation('⚠️ هل أنت متأكد من حذف جميع البيانات؟ هذا الإجراء لا يمكن التراجع عنه!', async () => {
+                try {
+                    await dbHelper.clear('appointments');
+                    await dbHelper.clear('patients');
+                    
+                    appointments = [];
+                    patients = [];
+                    
+                    refreshAllData();
+                    showToast('تم حذف جميع البيانات بنجاح', 'success');
+                } catch (error) {
+                    console.error('Error clearing all data:', error);
+                    showToast('خطأ في حذف البيانات', 'error');
+                }
+            });
+        }
+
+        function resetSystem() {
+            showConfirmation('⚠️ هل أنت متأكد من إعادة تعيين النظام؟ سيتم حذف جميع البيانات واستعادة الإعدادات الافتراضية!', async () => {
+                try {
+                    await dbHelper.clear('appointments');
+                    await dbHelper.clear('patients');
+                    await dbHelper.clear('users');
+                    await dbHelper.clear('settings');
+
+                    // Reset to default state
+                    appointments = [];
+                    patients = [];
+                    users = [];
+                    settings = {
+                        clinic: {
+                            name: 'عيادة الطب العام',
+                            appointmentDuration: 30,
+                            returnPeriod: 7,
+                            defaultFee: 100
+                        },
+                        sync: {
+                            interval: 30,
+                            autoSync: true,
+                            lastSync: null
+                        }
+                    };
+
+                    await initializeDefaultData();
+                    refreshAllData();
+                    
+                    showToast('تم إعادة تعيين النظام بنجاح', 'success');
+                } catch (error) {
+                    console.error('Error resetting system:', error);
+                    showToast('خطأ في إعادة تعيين النظام', 'error');
+                }
+            });
+        }
+
+        // Utility functions
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('ar-SA');
+        }
+
+        function formatTime(dateString) {
+            if (!dateString) return '-';
+            const date = new Date(dateString);
+            return date.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function formatDateTime(date, time = null) {
+            if (!date) return '-';
+            
+            if (time) {
+                return `${formatDate(date)} ${time}`;
+            }
+            
+            const dateObj = new Date(date);
+            return `${dateObj.toLocaleDateString('ar-SA')} ${dateObj.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' })}`;
+        }
+
+        function getStatusLabel(status) {
+            const labels = {
+                waiting: 'في الانتظار',
+                examining: 'قيد الفحص',
+                done: 'تم الانتهاء',
+                cancelled: 'ملغي',
+                return: 'عودة'
+            };
+            return labels[status] || status;
+        }
+
+        function getGenderLabel(gender) {
+            const labels = {
+                male: 'ذكر',
+                female: 'أنثى'
+            };
+            return labels[gender] || '-';
+        }
+
+        // Toast notification system
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast-notification px-4 py-3 rounded-lg shadow-lg text-white mb-2 slide-in ${getToastColor(type)}`;
+            toast.textContent = message;
+
+            const container = document.getElementById('toast-container');
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.remove();
+            }, 5000);
+        }
+
+        function getToastColor(type) {
+            const colors = {
+                success: 'bg-green-500',
+                error: 'bg-red-500',
+                warning: 'bg-yellow-500',
+                info: 'bg-blue-500'
+            };
+            return colors[type] || colors.info;
+        }
+
+        // Confirmation modal
+        function showConfirmation(message, onConfirm) {
+            const modal = document.getElementById('confirmationModal');
+            const messageEl = document.getElementById('confirmationMessage');
+            const confirmBtn = document.getElementById('confirmAction');
+
+            messageEl.textContent = message;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
+            // Remove old listeners
+            const newConfirmBtn = confirmBtn.cloneNode(true);
+            confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+
+            // Add new listener
+            newConfirmBtn.addEventListener('click', () => {
+                onConfirm();
+                closeConfirmationModal();
+            });
+        }
+
+        function closeConfirmationModal() {
+            const modal = document.getElementById('confirmationModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        // PWA functions
+        function setupPWA() {
+            // Register service worker
+            if ('serviceWorker' in navigator) {
+                const swCode = `
+                    const CACHE_NAME = 'medical-appointments-v1';
+                    const urlsToCache = [
+                        '/',
+                        'https://cdn.tailwindcss.com',
+                        'https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700&display=swap'
+                    ];
+
+                    self.addEventListener('install', event => {
+                        event.waitUntil(
+                            caches.open(CACHE_NAME)
+                                .then(cache => cache.addAll(urlsToCache))
+                        );
+                    });
+
+                    self.addEventListener('fetch', event => {
+                        event.respondWith(
+                            caches.match(event.request)
+                                .then(response => {
+                                    if (response) {
+                                        return response;
+                                    }
+                                    return fetch(event.request);
+                                })
+                        );
+                    });
+                `;
+
+                const blob = new Blob([swCode], { type: 'application/javascript' });
+                const swUrl = URL.createObjectURL(blob);
+
+                navigator.serviceWorker.register(swUrl)
+                    .then(registration => {
+                        console.log('Service Worker registered successfully');
+                    })
+                    .catch(error => {
+                        console.log('Service Worker registration failed');
+                    });
+            }
+
+            // Handle install prompt
+            let deferredPrompt;
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredPrompt = e;
+                
+                // Show install button/prompt
+                const installToast = document.createElement('div');
+                installToast.className = 'fixed bottom-4 left-4 bg-primary text-white p-4 rounded-lg shadow-lg z-50';
+                installToast.innerHTML = `
+                    <div class="flex items-center space-x-3 space-x-reverse">
+                        <span>تثبيت التطبيق على جهازك؟</span>
+                        <button id="installApp" class="bg-white text-primary px-3 py-1 rounded text-sm">تثبيت</button>
+                        <button id="dismissInstall" class="text-white/80 hover:text-white">✕</button>
+                    </div>
+                `;
+                document.body.appendChild(installToast);
+
+                document.getElementById('installApp').addEventListener('click', () => {
+                    deferredPrompt.prompt();
+                    deferredPrompt.userChoice.then(choiceResult => {
+                        if (choiceResult.outcome === 'accepted') {
+                            showToast('تم تثبيت التطبيق بنجاح!', 'success');
+                        }
+                        deferredPrompt = null;
+                        installToast.remove();
+                    });
+                });
+
+                document.getElementById('dismissInstall').addEventListener('click', () => {
+                    installToast.remove();
+                });
+            });
+        }
+
+        // Dark mode setup
+        function setupDarkMode() {
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.documentElement.classList.add('dark');
+            }
+            
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+                if (event.matches) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            });
+        }
+
+        // Connection status
+        function updateConnectionStatus() {
+            const statusEl = document.getElementById('connectionStatus');
+            if (navigator.onLine) {
+                statusEl.textContent = '🌐 متصل';
+                statusEl.className = 'connection-status connection-online';
+            } else {
+                statusEl.textContent = '📱 أوفلاين';
+                statusEl.className = 'connection-status connection-offline';
+            }
+        }
+
+        // Keyboard shortcuts
+        function handleKeyboardShortcuts(e) {
+            if (e.ctrlKey) {
+                switch (e.key) {
+                    case 'n':
+                        e.preventDefault();
+                        const activePage = document.querySelector('.page.active');
+                        if (activePage.id === 'appointmentsPage') {
+                            openAppointmentModal();
+                        } else if (activePage.id === 'patientsPage') {
+                            openPatientModal();
+                        } else if (activePage.id === 'usersPage') {
+                            openUserModal();
+                        }
+                        break;
+                    case 's':
+                        e.preventDefault();
+                        const searchInput = document.querySelector('.page.active input[type="text"]');
+                        if (searchInput) {
+                            searchInput.focus();
+                        }
+                        break;
+                }
+            }
+        }
+
+        // Field management functions (placeholders for settings)
+        function toggleAppointmentField(index, enabled) {
+            settings.appointmentFields[index].enabled = enabled;
+            saveDataToDB();
+        }
+
+        function togglePermission(role, permission, enabled) {
+            if (!settings.permissions[role]) {
+                settings.permissions[role] = [];
+            }
+
+            if (enabled) {
+                if (!settings.permissions[role].includes(permission)) {
+                    settings.permissions[role].push(permission);
+                }
+            } else {
+                settings.permissions[role] = settings.permissions[role].filter(p => p !== permission);
+            }
+
+            saveDataToDB();
+        }
+
+        // Initialize app when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            initApp();
+            updateConnectionStatus();
+            populateDoctorSelects();
+        });
+    </script>
+</body>
+</html>
